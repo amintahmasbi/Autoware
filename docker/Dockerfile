@@ -1,22 +1,54 @@
-FROM nvidia/cuda:8.0-ubuntu14.04
-MAINTAINER Yuki Iida <aiueo.0409@gmail.com>
+FROM nvidia/cuda:8.0-cudnn5-devel-ubuntu14.04
+
+MAINTAINER Amin Tahmasbi <amin.tahmasbi@gmail.com>
 
 RUN apt-get update && apt-get install -y \
         software-properties-common \
-        wget curl git cmake cmake-curses-gui
+        wget \
+	curl \
+	git \
+	cmake \
+	cmake-curses-gui
+
+
+# setup keys and setup sources.list for gazebo 2.2.6
+RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu trusty main" > /etc/apt/sources.list.d/gazebo-latest.list
+RUN apt-key adv --fetch-keys http://packages.osrfoundation.org/gazebo.key 
 
 # Intall ROS
 RUN wget http://packages.ros.org/ros.key -O - | apt-key add -
 RUN echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list
+
 RUN apt-get update && apt-get install -y \
-        ros-indigo-desktop-full ros-indigo-nmea-msgs \
-        ros-indigo-nmea-navsat-driver ros-indigo-sound-play \
+        ros-indigo-desktop-full \
+	ros-indigo-nmea-msgs \
+        ros-indigo-nmea-navsat-driver \
+	ros-indigo-sound-play \
         ros-indigo-jsk-visualization \
         ros-indigo-perception-pcl \
         ros-indigo-openni-launch \
         ros-indigo-turtlebot-simulator \
-        libnlopt-dev freeglut3-dev qtbase5-dev \
-        libqt5opengl5-dev libssh2-1-dev libarmadillo-dev libpcap-dev gksu
+	ros-indigo-grid-map \
+        libnlopt-dev \
+	freeglut3-dev \
+	qtbase5-dev \
+	ros-indigo-controller-manager \
+	ros-indigo-ros-control \
+	ros-indigo-ros-controllers \
+	ros-indigo-gazebo-ros-pkgs \
+	ros-indigo-gazebo-ros-control \
+	ros-indigo-sicktoolbox \
+	ros-indigo-sicktoolbox-wrapper \
+	ros-indigo-joystick-drivers \
+	ros-indigo-novatel-span-driver \
+        libqt5opengl5-dev \
+	libssh2-1-dev \
+	libarmadillo-dev \
+	libpcap-dev \
+	gksu
+
+
+
 RUN rosdep init \
         && rosdep update \
         && echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
@@ -31,11 +63,27 @@ RUN apt-get install -y \
 
 # Intall some basic GUI and sound libs
 RUN apt-get install -y \
-                xz-utils file locales dbus-x11 pulseaudio dmz-cursor-theme \
-                fonts-dejavu fonts-liberation hicolor-icon-theme \
-                libcanberra-gtk3-0 libcanberra-gtk-module libcanberra-gtk3-module \
-                libasound2 libgtk2.0-0 libdbus-glib-1-2 libxt6 libexif12 \
-                libgl1-mesa-glx libgl1-mesa-dri \
+	xz-utils \
+	file \
+	locales \
+	dbus-x11 \
+	pulseaudio \
+	dmz-cursor-theme \
+	fonts-dejavu \
+	fonts-liberation \
+	hicolor-icon-theme \
+	libcanberra-gtk3-0 \
+	libcanberra-gtk-module \
+	libcanberra-gtk3-module \
+	libasound2 \
+	libgtk2.0-0 \
+	libdbus-glib-1-2 \
+	libxt6 \
+	libexif12 \
+	libgl1-mesa-dev \
+	libgl1-mesa-glx \
+	libgl1-mesa-dri \
+	libglew-dev \
         && update-locale LANG=C.UTF-8 LC_MESSAGES=POSIX
 
 # Intall some basic GUI tools
@@ -44,7 +92,37 @@ RUN apt-get install -y \
         gnome-terminal
 
 # Install OpenCV
-RUN apt-get update && apt-get -y install libopencv-dev build-essential cmake git libgtk2.0-dev pkg-config python-dev python-numpy libdc1394-22 libdc1394-22-dev libjpeg-dev libpng12-0 libjasper-dev libavcodec-dev libavformat-dev libswscale-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libv4l-dev libtbb-dev libqt4-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils unzip
+RUN apt-get update && apt-get -y install \
+	libopencv-dev \
+	build-essential \
+	cmake \
+	git \
+	libgtk2.0-dev \
+	pkg-config \
+	python-dev \
+	python-numpy \
+	libdc1394-22 \
+	libdc1394-22-dev \
+	libjpeg-dev \
+	libpng12-0 \
+	libjasper-dev \
+	libavcodec-dev \
+	libavformat-dev \
+	libswscale-dev \
+	libgstreamer0.10-dev \
+	libgstreamer-plugins-base0.10-dev \
+	libv4l-dev \
+	libtbb-dev \
+	libqt4-dev \
+	libmp3lame-dev \
+	libopencore-amrnb-dev \
+	libopencore-amrwb-dev \
+	libtheora-dev \
+	libvorbis-dev \
+	libxvidcore-dev \
+	x264 \
+	v4l-utils \
+	unzip
 
 RUN wget https://github.com/opencv/opencv/archive/2.4.13.zip && \
     unzip 2.4.13.zip && \
@@ -79,6 +157,9 @@ RUN echo "source /opt/ros/indigo/setup.bash" >> /home/$USERNAME/.bashrc && \
 
 # Change user
 USER autoware
+
+# setup environment for gazebo
+EXPOSE 11345
 
 # Install Autoware
 RUN git clone https://github.com/CPFL/Autoware.git /home/$USERNAME/Autoware
